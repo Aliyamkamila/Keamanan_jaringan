@@ -12,11 +12,62 @@
             min-height: 100vh;
         }
         .encrypted {
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
             font-family: monospace;
+        }
+        /* Make table cells wider and allow wrapping */
+        table th, table td {
+            min-width: 150px;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            white-space: normal;
+            word-break: break-word;
+        }
+        /* Center the table */
+        table {
+            margin-left: auto;
+            margin-right: auto;
+            border-collapse: collapse;
+            border: 1px solid #d1d5db; /* gray-300 */
+            background-color: white;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        thead {
+            background-color: #16a34a; /* green-600 */
+            color: white;
+        }
+        th, td {
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 0.75rem 1rem;
+            text-align: center;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb; /* gray-50 */
+        }
+        tbody tr:nth-child(odd) {
+            background-color: white;
+        }
+        /* Form inputs horizontal layout on md+ */
+        @media (min-width: 768px) {
+            .decrypt-form form {
+                display: flex;
+                gap: 1rem;
+                flex-wrap: nowrap;
+            }
+            .decrypt-form form > * {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            /* Make key input smaller */
+            #keyInput {
+                flex: 1.5 1 auto;
+            }
+            /* Make metode select smaller */
+            #decMethod {
+                flex: 1 1 auto;
+                min-width: 150px;
+            }
         }
     </style>
 </head>
@@ -25,24 +76,16 @@
         <span>📜</span> Riwayat Order Terenkripsi
     </h1>
 
-    <!-- Form Dekripsi Pindah ke Sini -->
+    <!-- Form Dekripsi with reordered inputs -->
     <section class="decrypt-form mb-8 w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
         <h2 class="text-2xl font-semibold text-indigo-700 mb-6 flex items-center gap-2">
             <span>🔓</span> Dekripsi Data
         </h2>
-        <form method="POST" action="{{ url_for('decrypt') }}" class="flex flex-col gap-4">
+        <form method="POST" action="{{ url_for('decrypt') }}" class="flex flex-col gap-4 md:gap-0">
             <input 
                 type="text" 
                 name="id" 
                 placeholder="ID Order" 
-                required 
-                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <input 
-                type="text" 
-                name="key" 
-                id="keyInput" 
-                placeholder="Password untuk AES" 
                 required 
                 class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
@@ -56,61 +99,57 @@
                 <option value="aes">AES</option>
                 <option value="rsa">RSA</option>
             </select>
-            <div id="rsaInfo" class="info hidden bg-blue-100 text-blue-800 px-4 py-3 rounded-md text-sm">
+            <input 
+                type="text" 
+                name="key" 
+                id="keyInput" 
+                placeholder="Password untuk AES" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <div id="rsaInfo" class="info hidden bg-blue-100 text-blue-800 px-4 py-3 rounded-md text-sm mt-2 md:mt-0 md:flex-1 md:items-center md:self-center">
                 Untuk dekripsi RSA, Anda tidak perlu memasukkan kunci jika menggunakan kunci sistem.<br>
                 Cukup ketik "system" pada field kunci.
             </div>
-            <button type="submit" class="btn bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-3 shadow-md transition-colors focus:outline-none focus:ring-4 focus:ring-green-300">
+            <button type="submit" class="btn bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-3 shadow-md transition-colors focus:outline-none focus:ring-4 focus:ring-green-300 mt-4 md:mt-0 md:w-auto md:self-center">
                 Dekripsi
             </button>
         </form>
     </section>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="mb-6 w-full max-w-5xl rounded-md bg-red-100 text-red-700 px-6 py-4 shadow">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <!-- Tabel Riwayat -->
-    <div class="overflow-x-auto w-full max-w-5xl rounded-lg shadow-lg bg-white">
-        <table class="w-max min-w-full border-collapse border border-gray-300">
-            <thead class="bg-green-600 text-white">
-                <tr>
-                    <th class="border border-gray-300 px-4 py-3 text-center">ID</th>
-                    <th class="border border-gray-300 px-4 py-3 text-center">Nama</th>
-                    <th class="border border-gray-300 px-4 py-3 text-center">Alamat</th>
-                    <th class="border border-gray-300 px-4 py-3 text-center">Produk</th>
-                    <th class="border border-gray-300 px-4 py-3 text-center">Jumlah</th>
-                    <th class="border border-gray-300 px-4 py-3 text-center">Metode</th>
-                    <th class="border border-gray-300 px-4 py-3 text-center">Hapus</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders %}
-                <tr class="even:bg-gray-50 odd:bg-white">
-                    <td class="border border-gray-300 px-4 py-3 text-center">{{ order['id'] }}</td>
-                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_nama'] }}">{{ order['enc_nama'] }}</td>
-                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_alamat'] }}">{{ order['enc_alamat'] }}</td>
-                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_produk'] }}">{{ order['enc_produk'] }}</td>
-                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_jumlah'] }}">{{ order['enc_jumlah'] }}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-center capitalize">{{ order['metode'] }}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-center">
-                        <form method="POST" action="{{ url_for('delete_order', id=order['id']) }}">
-                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-red-400" aria-label="Hapus order {{ order['id'] }}">
-                                🗑️
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <!-- Tabel Riwayat tanpa horizontal scroll, fully visible, centered -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Alamat</th>
+                <th>Produk</th>
+                <th>Jumlah</th>
+                <th>Metode</th>
+                <th>Hapus</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order['id'] }}</td>
+                <td class="encrypted" title="{{ order['enc_nama'] }}">{{ order['enc_nama'] }}</td>
+                <td class="encrypted" title="{{ order['enc_alamat'] }}">{{ order['enc_alamat'] }}</td>
+                <td class="encrypted" title="{{ order['enc_produk'] }}">{{ order['enc_produk'] }}</td>
+                <td class="encrypted" title="{{ order['enc_jumlah'] }}">{{ order['enc_jumlah'] }}</td>
+                <td class="capitalize">{{ order['metode'] }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_order', id=order['id']) }}">
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-red-400" aria-label="Hapus order {{ order['id'] }}">
+                            🗑️
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <script>
         document.getElementById('decMethod').addEventListener('change', function () {
