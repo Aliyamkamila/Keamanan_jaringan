@@ -1,0 +1,118 @@
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <title>Form Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-lg p-8 sm:p-10">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-8 flex items-center gap-3">
+            <span>📝</span> Buat Order
+        </h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mb-6 rounded-md bg-red-100 text-red-700 px-4 py-3" role="alert">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('order') }}" method="post" class="space-y-6">
+            <input 
+                type="text" 
+                name="nama" 
+                placeholder="Nama" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <input 
+                type="text" 
+                name="alamat" 
+                placeholder="Alamat" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <input 
+                type="text" 
+                name="produk" 
+                placeholder="Produk" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <input 
+                type="number" 
+                name="jumlah" 
+                placeholder="Jumlah" 
+                min="1"
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+
+            <select 
+                name="encryption_method" 
+                id="encMethod" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+                <option value="" disabled selected>-- Pilih Metode Enkripsi --</option>
+                <option value="aes">AES (Simetris)</option>
+                <option value="rsa">RSA (Asimetris)</option>
+            </select>
+
+            <div id="passwordField" class="relative transition-all duration-300 mt-4">
+                <input 
+                    type="password" 
+                    name="kunci" 
+                    placeholder="Password (untuk AES)" 
+                    required 
+                    id="passwordInput"
+                    class="w-full rounded-md border border-green-400 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+            </div>
+
+            <div id="infoText" class="hidden bg-blue-100 text-blue-800 px-4 py-3 rounded-md text-sm mt-4">
+                Untuk metode RSA, sistem akan menggunakan kunci yang tersimpan di server.<br>
+                Anda tidak perlu memasukkan kunci saat enkripsi, tapi akan membutuhkannya saat dekripsi.
+            </div>
+
+            <button 
+                type="submit" 
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-3 shadow-md transition-colors focus:outline-none focus:ring-4 focus:ring-green-300 mt-6"
+            >
+                Submit Order
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('encMethod').addEventListener('change', function() {
+            const method = this.value;
+            const passwordField = document.getElementById('passwordField');
+            const infoText = document.getElementById('infoText');
+            const keyInput = document.getElementsByName('kunci')[0];
+
+            if (method === 'rsa') {
+                passwordField.classList.add('hidden');
+                infoText.classList.remove('hidden');
+                keyInput.value = 'rsa_auto';
+                keyInput.removeAttribute('required');
+            } else {
+                passwordField.classList.remove('hidden');
+                infoText.classList.add('hidden');
+                keyInput.value = '';
+                keyInput.setAttribute('required', 'required');
+            }
+        });
+    </script>
+</body>
+</html>

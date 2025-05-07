@@ -1,0 +1,131 @@
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <title>Riwayat Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e7ff;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        .encrypted {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center">
+    <h1 class="text-4xl font-extrabold text-indigo-700 mb-6 flex items-center gap-3">
+        <span>📜</span> Riwayat Order Terenkripsi
+    </h1>
+
+    <!-- Form Dekripsi Pindah ke Sini -->
+    <section class="decrypt-form mb-8 w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-6 flex items-center gap-2">
+            <span>🔓</span> Dekripsi Data
+        </h2>
+        <form method="POST" action="{{ url_for('decrypt') }}" class="flex flex-col gap-4">
+            <input 
+                type="text" 
+                name="id" 
+                placeholder="ID Order" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <input 
+                type="text" 
+                name="key" 
+                id="keyInput" 
+                placeholder="Password untuk AES" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <select 
+                name="metode" 
+                id="decMethod" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+                <option value="" disabled selected>-- Pilih Metode --</option>
+                <option value="aes">AES</option>
+                <option value="rsa">RSA</option>
+            </select>
+            <div id="rsaInfo" class="info hidden bg-blue-100 text-blue-800 px-4 py-3 rounded-md text-sm">
+                Untuk dekripsi RSA, Anda tidak perlu memasukkan kunci jika menggunakan kunci sistem.<br>
+                Cukup ketik "system" pada field kunci.
+            </div>
+            <button type="submit" class="btn bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-3 shadow-md transition-colors focus:outline-none focus:ring-4 focus:ring-green-300">
+                Dekripsi
+            </button>
+        </form>
+    </section>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="mb-6 w-full max-w-5xl rounded-md bg-red-100 text-red-700 px-6 py-4 shadow">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Tabel Riwayat -->
+    <div class="overflow-x-auto w-full max-w-5xl rounded-lg shadow-lg bg-white">
+        <table class="w-max min-w-full border-collapse border border-gray-300">
+            <thead class="bg-green-600 text-white">
+                <tr>
+                    <th class="border border-gray-300 px-4 py-3 text-center">ID</th>
+                    <th class="border border-gray-300 px-4 py-3 text-center">Nama</th>
+                    <th class="border border-gray-300 px-4 py-3 text-center">Alamat</th>
+                    <th class="border border-gray-300 px-4 py-3 text-center">Produk</th>
+                    <th class="border border-gray-300 px-4 py-3 text-center">Jumlah</th>
+                    <th class="border border-gray-300 px-4 py-3 text-center">Metode</th>
+                    <th class="border border-gray-300 px-4 py-3 text-center">Hapus</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="even:bg-gray-50 odd:bg-white">
+                    <td class="border border-gray-300 px-4 py-3 text-center">{{ order['id'] }}</td>
+                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_nama'] }}">{{ order['enc_nama'] }}</td>
+                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_alamat'] }}">{{ order['enc_alamat'] }}</td>
+                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_produk'] }}">{{ order['enc_produk'] }}</td>
+                    <td class="border border-gray-300 px-4 py-3 encrypted" title="{{ order['enc_jumlah'] }}">{{ order['enc_jumlah'] }}</td>
+                    <td class="border border-gray-300 px-4 py-3 text-center capitalize">{{ order['metode'] }}</td>
+                    <td class="border border-gray-300 px-4 py-3 text-center">
+                        <form method="POST" action="{{ url_for('delete_order', id=order['id']) }}">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-red-400" aria-label="Hapus order {{ order['id'] }}">
+                                🗑️
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('decMethod').addEventListener('change', function () {
+            const method = this.value;
+            const keyInput = document.getElementById('keyInput');
+            const rsaInfo = document.getElementById('rsaInfo');
+            
+            if (method === 'rsa') {
+                keyInput.placeholder = "Private Key atau ketik 'system'";
+                rsaInfo.classList.remove('hidden');
+            } else {
+                keyInput.placeholder = "Password untuk AES";
+                rsaInfo.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

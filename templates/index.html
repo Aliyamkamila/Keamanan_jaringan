@@ -1,0 +1,80 @@
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <title>Secure Checkout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4 py-12">
+    <main class="bg-white max-w-md w-full rounded-2xl shadow-lg p-8 sm:p-10">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-8 text-center">Checkout Form</h1>
+        <form id="checkoutForm" class="space-y-6">
+            <input 
+                type="text" 
+                name="name" 
+                placeholder="Nama" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <input 
+                type="text" 
+                name="address" 
+                placeholder="Alamat" 
+                required 
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <input 
+                type="text" 
+                name="card" 
+                placeholder="Nomor Kartu (16 digit)" 
+                pattern="\d{16}" 
+                required 
+                inputmode="numeric"
+                maxlength="16"
+                class="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <button 
+                type="submit" 
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg py-3 shadow-md transition-colors focus:outline-none focus:ring-4 focus:ring-green-300"
+            >
+                Submit
+            </button>
+        </form>
+    </main>
+
+    <script>
+    document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get('name'),
+            address: formData.get('address'),
+            card: formData.get('card')
+        };
+
+        try {
+            const response = await fetch('/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            if (result.status === "success") {
+                alert("Data terenkripsi: " + result.encrypted_data);
+            } else {
+                alert("Error: " + (result.error || "Unknown error"));
+            }
+        } catch (error) {
+            alert("Network error: " + error.message);
+        }
+    });
+    </script>
+</body>
+</html>
